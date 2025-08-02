@@ -60,12 +60,15 @@ dependencies = [
     "setuptools==57.5.0",
     "tensorflow==2.15.0",
     "tensorflow_datasets==4.9.3",
-    "tensorflow_graphics==2021.12.3",
+    "tensorflow_graphics==2020.5.20",
     "termcolor==3.0.1",
     "timm==0.9.10",
     "tokenizers==0.19.1",
     "tqdm==4.66.4",
-    "transformers==4.40.1"
+    "transformers==4.40.1",
+    "webdataset==0.2.111",
+    "braceexpand==0.1.7",
+    "wandb==0.21.0"
 ]
 
 [project.optional-dependencies]
