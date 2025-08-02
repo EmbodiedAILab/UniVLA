@@ -108,7 +108,7 @@ class DINO_LAM(LightningModule):
 
         # Compute code usage
         unique, counts = torch.unique(outputs["indices"], return_counts=True)
-        index_counts = torch.zeros(self.lam_num_latents, dtype=torch.long).cuda()
+        index_counts = torch.zeros(self.lam_num_latents, dtype=torch.long).to('npu')
         index_counts[unique] = counts
         code_usage = (index_counts != 0).float().mean()
 
@@ -121,7 +121,7 @@ class DINO_LAM(LightningModule):
 
         if "indices_uncontrol" in outputs.keys():
             unique, counts = torch.unique(outputs["indices_uncontrol"], return_counts=True)
-            index_counts = torch.zeros(32, dtype=torch.long).cuda()
+            index_counts = torch.zeros(32, dtype=torch.long).to('npu')
             index_counts[unique] = counts
             uncontrol_code_usage = (index_counts != 0).float().mean()
 

@@ -3,6 +3,7 @@ import os
 import time
 import json
 import torch
+import torch_npu
 import torch.nn as nn
 import cv2 as cv
 import numpy as np
@@ -18,7 +19,7 @@ from prismatic.extern.hf.processing_prismatic import PrismaticImageProcessor, Pr
 ACTION_DIM = 7
 DATE = time.strftime("%Y_%m_%d")
 DATE_TIME = time.strftime("%Y_%m_%d-%H_%M_%S")
-DEVICE = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+DEVICE = torch.device("npu:0") if torch_npu.npu.is_available() else torch.device("cpu")
 np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
 
 # Initialize UniVLA model
@@ -156,13 +157,13 @@ class UniVLAInference:
         os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
         # Load model
-        self.vla = get_vla(saved_model_path).cuda()
+        self.vla = get_vla(saved_model_path).to('npu')
         self.processor = get_processor(saved_model_path)
 
         # Load action decoder
         self.action_decoder = ActionDecoder(window_size = pred_action_horizon)
-        self.action_decoder.net.load_state_dict(torch.load(decoder_path))
-        self.action_decoder.eval().cuda()
+        self.action_decoder.net.load_state_dict(torch.load(decoder_path, map_location=torch.device('cpu')))
+        self.action_decoder.eval().to('npu')
 
 
         self.image_size = image_size
@@ -221,7 +222,7 @@ class UniVLAInference:
 
 
         # predict action (7-dof; un-normalize for bridgev2)
-        inputs = self.processor(prompt, image).to("cuda:0", dtype=torch.bfloat16)
+        inputs = self.processor(prompt, image).to("npu:0", dtype=torch.bfloat16)
         latent_action, visual_embed, generated_ids = self.vla.predict_latent_action(**inputs, unnorm_key=self.unnorm_key, do_sample=True, temperature=0.75, top_p = 0.9)
 
         latent_action_detokenize = [f'<ACT_{i}>' for i in range(32)]

@@ -189,8 +189,8 @@ def eval_r2r(cfg: GenerateConfig) -> None:
         # Load action decoder
         if not cfg.use_pretrained_openvla:
             action_decoder = ActionDecoder(cfg.window_size, cfg.add_visual_embed)
-            action_decoder.load_state_dict(torch.load(cfg.action_decoder_path))
-            action_decoder.eval().cuda()
+            action_decoder.load_state_dict(torch.load(cfg.action_decoder_path, map_location=torch.device('cpu')))
+            action_decoder.eval().to('npu')
 
         # Load model
         model = get_model(cfg)

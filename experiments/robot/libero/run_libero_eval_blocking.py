@@ -170,8 +170,8 @@ def eval_libero(cfg: GenerateConfig) -> None:
 
     # Load action decoder
     action_decoder = ActionDecoder(cfg.window_size)
-    action_decoder.net.load_state_dict(torch.load(cfg.action_decoder_path))
-    action_decoder.eval().cuda()
+    action_decoder.net.load_state_dict(torch.load(cfg.action_decoder_path, map_location=torch.device('cpu')))
+    action_decoder.eval().to('npu')
 
     # Load model
     model = get_model(cfg)
