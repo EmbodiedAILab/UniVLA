@@ -6,6 +6,7 @@ from typing import Optional
 
 import draccus
 import torch
+import torch_npu
 import torch.nn as nn
 import torchvision.transforms as transforms
 import torch.distributed as dist
@@ -68,7 +69,7 @@ class Wrapped_Model(torch.nn.Module):
             self.vla.requires_grad_(False)
 
     def forward(self, batch):
-        with torch.autocast("cuda", dtype=torch.bfloat16):
+        with torch.autocast(device_type="npu", dtype=torch.bfloat16, enabled=True):
             vla_output = self.vla(
                 input_ids=batch["input_ids"],
                 attention_mask=batch["attention_mask"],
@@ -143,7 +144,7 @@ class FinetuneConfig:
 
     # Tracking Parameters
     wandb_project: str = "fientune-LIBERO"                          # Name of W&B project to log to (use default!)
-    wandb_entity: str = "opendrivelab"                              # Name of entity to log under
+    # wandb_entity: str = "opendrivelab"                              # Name of entity to log under
     run_id_note: Optional[str] = None                               # Extra note for logging, Weights & Biases
 
 
@@ -152,11 +153,11 @@ class FinetuneConfig:
 def finetune(cfg: FinetuneConfig) -> None:
     print(f"Fine-tuning OpenVLA Model `{cfg.vla_path}` on `{cfg.dataset_name}`")
 
-    # [Validate] Ensure GPU Available & Set Device / Distributed Context
-    assert torch.cuda.is_available(), "Fine-tuning assumes at least one GPU is available!"
+    # [Validate] Ensure NPU Available & Set Device / Distributed Context
+    assert torch_npu.npu.is_available(), "Fine-tuning assumes at least one NPU is available!"
     distributed_state = PartialState()
-    torch.cuda.set_device(device_id := distributed_state.local_process_index)
-    torch.cuda.empty_cache()
+    torch_npu.npu.set_device(device_id := distributed_state.local_process_index)
+    torch_npu.npu.empty_cache()
 
     # Configure Unique Experiment ID & Log Directory
     exp_id = (
@@ -253,8 +254,10 @@ def finetune(cfg: FinetuneConfig) -> None:
         num_heads=cfg.lam_num_heads,
         dropout=0.,
     )
+    print("latent_action_model device: ", latent_action_model.device)
+    print("current device: ", device_id)
 
-    lam_ckpt = torch.load(cfg.lam_path)['state_dict']
+    lam_ckpt = torch.load(cfg.lam_path, map_location=torch.device("cpu"))['state_dict']
     new_ckpt = {}
     for key in lam_ckpt.keys():
         new_ckpt[key.replace("lam.", "")] = lam_ckpt[key]
@@ -301,7 +304,7 @@ def finetune(cfg: FinetuneConfig) -> None:
 
     # Initialize Logging =>> W&B
     if distributed_state.is_main_process:
-        wandb.init(entity=cfg.wandb_entity, project=cfg.wandb_project, name=f"ft+{exp_id}")
+        wandb.init(project=cfg.wandb_project, name=f"ft+{exp_id}")
 
     # Deque to store recent train metrics (used for computing smoothened metrics for gradient accumulation)
     recent_losses = deque(maxlen=cfg.grad_accumulation_steps)
