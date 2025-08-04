@@ -7,6 +7,7 @@ import time
 import numpy as np
 import tensorflow as tf
 import torch
+import torch_npu
 from PIL import Image
 from transformers import AutoConfig, AutoImageProcessor, AutoModelForVision2Seq, AutoProcessor
 
@@ -18,7 +19,7 @@ from prismatic.extern.hf.processing_prismatic import PrismaticImageProcessor, Pr
 ACTION_DIM = 7
 DATE = time.strftime("%Y_%m_%d")
 DATE_TIME = time.strftime("%Y_%m_%d-%H_%M_%S")
-DEVICE = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
+DEVICE = torch.device("npu:0") if torch_npu.npu.is_available() else torch.device("cpu")
 np.set_printoptions(formatter={"float": lambda x: "{0:0.3f}".format(x)})
 
 # Initialize system prompt for OpenVLA v0.1.
