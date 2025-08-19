@@ -124,6 +124,18 @@ class Exp_DinoSigLIP_224px_OXE_Magic_Soup_Plus(Exp_SigLIP_224px_Bridge):
     global_batch_size: int = 1024
     per_device_batch_size: int = 32
 
+@dataclass
+class Exp_DinoSigLIP_224px_OXE_Ego4D(Exp_SigLIP_224px_Bridge):
+    vla_id: str = "prism-dinosiglip-224px+oxe-ego4d"
+    base_vlm: Union[str, Path] = "prism-dinosiglip-224px+7b"
+
+    data_mix: str = "oxe_mix_ego4d"          # OpenX (Manipulation + Navigation)
+    # data_mix: str = "omni_magic_soup_plus_plus"   # OpenX + Humam
+
+    expected_world_size: int = 8
+    global_batch_size: int = 256
+    per_device_batch_size: int = 32
+    learning_rate: float = 1e-5
 
 
 
@@ -141,6 +153,9 @@ class VLARegistry(Enum):
 
     # Pre-training on full dataset
     DINOSIGLIP_224PX_MX_OXE_MAGIC_SOUP_PLUS = Exp_DinoSigLIP_224px_OXE_Magic_Soup_Plus
+
+    # Pre-training on OXE only
+    DINOSIGLIP_224PX_MX_OXE_EGO4D = Exp_DinoSigLIP_224px_OXE_Ego4D
 
 
     @property

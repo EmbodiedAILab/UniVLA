@@ -7,6 +7,7 @@ from typing import Optional, Tuple, Union
 
 import draccus
 import torch
+import torch_npu
 import torch.distributed as dist
 import torchvision.transforms as transforms
 import yaml
@@ -73,7 +74,7 @@ class TrainConfig:
     # Tracking Parameters
     trackers: Tuple[str, ...] = ("jsonl", "wandb")                  # Trackers to initialize (if W&B, add config!)
     wandb_project: str = "latent-action-pretrain"                   # Name of W&B project to log to (use default!)
-    wandb_entity: str = "opendrivelab"                              # Name of entity to log under
+    wandb_entity: str = None                              # Name of entity to log under
 
     def __post_init__(self) -> None:
         """Lift optimization parameters from `self.vla` for ease of use =>> validate on `expected_world_size`"""
@@ -103,8 +104,8 @@ def train(cfg: TrainConfig) -> None:
     overwatch.info("OpenVLA Training :: Warming Up")
 
     # Note => Under `torchrun` initializing `overwatch` will automatically set up `torch.distributed`
-    torch.cuda.set_device(device_id := overwatch.local_rank())
-    torch.cuda.empty_cache()
+    torch_npu.npu.set_device(device_id := overwatch.local_rank())
+    torch_npu.npu.empty_cache()
 
     # Configure Unique Run Name & Save Directory
     vla_id = cfg.vla.vla_id
@@ -197,7 +198,7 @@ def train(cfg: TrainConfig) -> None:
         dropout=0.,
     )
 
-    lam_ckpt = torch.load(cfg.lam_path)['state_dict']
+    lam_ckpt = torch.load(cfg.lam_path, map_location=torch.device('cpu'))['state_dict']
     new_ckpt = {}
     for key in lam_ckpt.keys():
         new_ckpt[key.replace("lam.", "")] = lam_ckpt[key]

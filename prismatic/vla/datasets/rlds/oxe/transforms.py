@@ -969,4 +969,11 @@ OXE_STANDARDIZATION_TRANSFORMS = {
     "ego4d_split_2": human_dataset_transform,
     "ego4d_split_3": human_dataset_transform,
     "ego4d_split_4": human_dataset_transform,
+    "ego4d_split_5": human_dataset_transform,
+    "ego4d_split_6": human_dataset_transform,
+    "ego4d_split_7": human_dataset_transform,
+    "ego4d_split_8": human_dataset_transform,
+    "ego4d_split_9": human_dataset_transform,
+    "ego4d_split_10": human_dataset_transform,
+    "ego4d_split_11": human_dataset_transform,
 }
